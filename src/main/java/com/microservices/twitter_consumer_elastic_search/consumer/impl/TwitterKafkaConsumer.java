@@ -2,10 +2,12 @@ package com.microservices.twitter_consumer_elastic_search.consumer.impl;
 
 import com.microservices.twitter_consumer_elastic_search.config.KafkaConfigData;
 import com.microservices.twitter_consumer_elastic_search.consumer.KafkaConsumer;
+import com.microservices.twitter_consumer_elastic_search.kafka.admin.KafkaAdminClient;
 import com.microservices.twitter_consumer_elastic_search.kafka.model.TwitterAvroModel;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.KafkaListenerEndpointRegistry;
 import org.springframework.kafka.support.KafkaHeaders;
@@ -14,6 +16,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class TwitterKafkaConsumer implements KafkaConsumer<Long, TwitterAvroModel>{
@@ -28,6 +31,13 @@ public class TwitterKafkaConsumer implements KafkaConsumer<Long, TwitterAvroMode
         this.kafkaListenerEndpointRegistry = kafkaListenerEndpointRegistry;
         this.kafkaAdminClient = kafkaAdminClient;
         this.kafkaConfigData = kafkaConfigData;
+    }
+
+    @EventListener
+    public void onAppStarted(ApplicationStartedEvent event) {
+        kafkaAdminClient.checkTopicsCreated();
+        LOGGER.info("The topic with name: {} is ready for operation", kafkaConfigData.getTopicName());
+        Objects.requireNonNull(kafkaListenerEndpointRegistry.getListenerContainer("twitterTopicListener")).start();
     }
 
     @Override
