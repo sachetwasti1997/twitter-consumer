@@ -1,5 +1,10 @@
 package com.microservices.twitter_consumer_elastic_search.consumer.impl;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.microservices.twitter_consumer_elastic_search.config.KafkaConfigData;
 import com.microservices.twitter_consumer_elastic_search.config.KafkaConsumerConfigData;
 import com.microservices.twitter_consumer_elastic_search.consumer.KafkaConsumer;
@@ -19,28 +24,20 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
 @Service
-public class TwitterKafkaConsumer implements KafkaConsumer<Long, TwitterAvroModel>{
+public class TwitterKafkaConsumer implements KafkaConsumer<Long, String>{
     private static final Logger LOGGER = LoggerFactory.getLogger(TwitterKafkaConsumer.class);
 
-    private final KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry;
-    private final KafkaAdminClient kafkaAdminClient;
-    private final KafkaConfigData kafkaConfigData;
     private final ElasticIndexClient<TwitterIndexModel> elasticIndexClient;
     private final AvroToElasticModelTransformer avroToElasticModelTransformer;
-    private final KafkaConsumerConfigData kafkaConsumerConfigData;
 
-    public TwitterKafkaConsumer(KafkaListenerEndpointRegistry kafkaListenerEndpointRegistry,
-                                KafkaAdminClient kafkaAdminClient, KafkaConfigData kafkaConfigData, ElasticIndexClient<TwitterIndexModel> elasticIndexClient, AvroToElasticModelTransformer avroToElasticModelTransformer, KafkaConsumerConfigData kafkaConsumerConfigData) {
-        this.kafkaListenerEndpointRegistry = kafkaListenerEndpointRegistry;
-        this.kafkaAdminClient = kafkaAdminClient;
-        this.kafkaConfigData = kafkaConfigData;
+    public TwitterKafkaConsumer(ElasticIndexClient<TwitterIndexModel> elasticIndexClient, AvroToElasticModelTransformer avroToElasticModelTransformer, KafkaConsumerConfigData kafkaConsumerConfigData) {
         this.elasticIndexClient = elasticIndexClient;
         this.avroToElasticModelTransformer = avroToElasticModelTransformer;
-        this.kafkaConsumerConfigData = kafkaConsumerConfigData;
     }
 
 //    @EventListener
@@ -52,23 +49,29 @@ public class TwitterKafkaConsumer implements KafkaConsumer<Long, TwitterAvroMode
 
     @Override
     @KafkaListener(id = "twitterTopicListener", topics = "${kafka-config.topic-name}")
-    public void receive(@Payload List<TwitterAvroModel> messages,
+    public void receive(@Payload String messages,
                         @Header(KafkaHeaders.RECEIVED_KEY) List<Long> keys,
                         @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partition,
                         @Header(KafkaHeaders.OFFSET) List<Long> offsets) {
-        LOGGER.info("Type of message: {}, {} no of messages received with keys {}, partitions: {} and offsets: {}"+
+        ObjectMapper objectMapper = new ObjectMapper();
+        LOGGER.info("message received keys {}, partitions: {} and offsets: {}"+
                 " sending it to Elastic, Thread-id: {}",
-                    messages.get(0).getClass(),
-                    messages.size(),
                     keys,
                     partition,
                     offsets,
                     Thread.currentThread().getName()
                 );
+
+        try {
+            TwitterAvroModel twitterAvroModel = objectMapper.readValue(messages, TwitterAvroModel.class);
+//            LOGGER.info("Message Received: {}", twitterAvroModel);
+        String documentIds = elasticIndexClient.save(avroToElasticModelTransformer.getElasticModels(twitterAvroModel));
+        LOGGER.info("Documents saved to elasticsearch with ids: {}", documentIds);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
 //        messages.forEach(twitterAvroModel -> {
 //            LOGGER.info("Type of the object received: {}", twitterAvroModel.getClass());
 //        });
-//        List<String> documentIds = elasticIndexClient.save(avroToElasticModelTransformer.getElasticModels(messages));
-//        LOGGER.info("Documents saved to elasticsearch with ids: {}", documentIds);
     }
 }

@@ -5,5 +5,5 @@ import com.microservices.twitter_consumer_elastic_search.elastic.model.IndexMode
 import java.util.List;
 
 public interface ElasticIndexClient<T extends IndexModel> {
-    List<String> save(List<T> documents);
+    String save(T documents);
 }

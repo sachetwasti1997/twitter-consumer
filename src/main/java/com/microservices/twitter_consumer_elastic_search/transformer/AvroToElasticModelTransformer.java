@@ -11,15 +11,13 @@ import java.util.List;
 
 @Component
 public class AvroToElasticModelTransformer {
-    public List<TwitterIndexModel> getElasticModels(List<TwitterAvroModel> twitterAvroModels) {
-        return twitterAvroModels.stream()
-                .map(twitterAvroModel -> TwitterIndexModel.builder()
+    public TwitterIndexModel getElasticModels(TwitterAvroModel twitterAvroModel) {
+        return TwitterIndexModel.builder()
                         .userId(twitterAvroModel.getUserId())
                         .id(String.valueOf(twitterAvroModel.getId()))
                         .text(twitterAvroModel.getText())
                         .createdAt(LocalDateTime.ofInstant(Instant.ofEpochMilli(twitterAvroModel.getCreatedAt()),
                                 ZoneId.systemDefault()))
-                        .build()
-                ).toList();
+                        .build();
     }
 }

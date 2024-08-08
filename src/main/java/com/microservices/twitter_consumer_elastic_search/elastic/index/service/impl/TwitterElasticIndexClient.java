@@ -34,17 +34,14 @@ public class TwitterElasticIndexClient implements ElasticIndexClient<TwitterInde
     }
 
     @Override
-    public List<String> save(List<TwitterIndexModel> documents) {
-        List<IndexQuery> indexQueries = elasticIndexUtil.getIndexQueries(documents);
-        List<IndexedObjectInformation> documentIds = elasticsearchOperations.bulkIndex(
+    public String save(TwitterIndexModel documents) {
+        IndexQuery indexQueries = elasticIndexUtil.getIndexQueries(documents);
+        String documentIds = elasticsearchOperations.index(
                 indexQueries,
                 IndexCoordinates.of(elasticConfigData.getIndexName())
         );
-        List<String> documentsSaved = documentIds.stream()
-                .map(Record::toString)
-                .toList();
         LOGGER.info("Documents Indexed successfully with type: {} and ids: {}", TwitterIndexModel.class.getName(),
-                documentsSaved);
-        return documentsSaved;
+                documentIds);
+        return documentIds;
     }
 }

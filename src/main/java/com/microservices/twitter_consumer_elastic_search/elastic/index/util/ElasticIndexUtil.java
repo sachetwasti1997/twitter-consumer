@@ -10,14 +10,11 @@ import java.util.List;
 @Component
 public class ElasticIndexUtil<T extends IndexModel> {
 
-    public List<IndexQuery> getIndexQueries(List<T> documents) {
-        return documents.stream()
-                .map(doc -> new IndexQueryBuilder()
-                        .withId(doc.getId())
-                        .withObject(doc)
-                        .build()
-                )
-                .toList();
+    public IndexQuery getIndexQueries(T documents) {
+        return new IndexQueryBuilder()
+                        .withId(documents.getId())
+                        .withObject(documents)
+                        .build();
     }
 
 }
