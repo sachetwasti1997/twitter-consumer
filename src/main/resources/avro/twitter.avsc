@@ -1,5 +1,5 @@
 {
-  "namespace": "com.microservices.twitter_consumer_elastic_search.kafka.model",
+  "namespace": "com.twitter.to.kafka.twitter_to_kafka.kafka.model",
   "type": "record",
   "name": "TwitterAvroModel",
   "fields": [

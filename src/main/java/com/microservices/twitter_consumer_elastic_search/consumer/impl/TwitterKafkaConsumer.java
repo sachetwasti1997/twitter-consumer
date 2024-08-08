@@ -43,12 +43,12 @@ public class TwitterKafkaConsumer implements KafkaConsumer<Long, TwitterAvroMode
         this.kafkaConsumerConfigData = kafkaConsumerConfigData;
     }
 
-    @EventListener
-    public void onAppStarted(ApplicationStartedEvent event) {
-        kafkaAdminClient.checkTopicsCreated();
-        LOGGER.info("The topic with name: {} is ready for operation", kafkaConfigData.getTopicName());
-        Objects.requireNonNull(kafkaListenerEndpointRegistry.getListenerContainer("twitterTopicListener")).start();
-    }
+//    @EventListener
+//    public void onAppStarted(ApplicationStartedEvent event) {
+//        kafkaAdminClient.checkTopicsCreated();
+//        LOGGER.info("The topic with name: {} is ready for operation", kafkaConfigData.getTopicName());
+//        Objects.requireNonNull(kafkaListenerEndpointRegistry.getListenerContainer("twitterTopicListener")).start();
+//    }
 
     @Override
     @KafkaListener(id = "twitterTopicListener", topics = "${kafka-config.topic-name}")
@@ -56,17 +56,18 @@ public class TwitterKafkaConsumer implements KafkaConsumer<Long, TwitterAvroMode
                         @Header(KafkaHeaders.RECEIVED_KEY) List<Long> keys,
                         @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partition,
                         @Header(KafkaHeaders.OFFSET) List<Long> offsets) {
-        LOGGER.info("{} no of messages received with keys {}, partitions: {} and offsets: {}"+
+        LOGGER.info("Type of message: {}, {} no of messages received with keys {}, partitions: {} and offsets: {}"+
                 " sending it to Elastic, Thread-id: {}",
+                    messages.get(0).getClass(),
                     messages.size(),
                     keys,
                     partition,
                     offsets,
                     Thread.currentThread().getName()
                 );
-        messages.forEach(twitterAvroModel -> {
-            LOGGER.info("Type of the object received: {}", twitterAvroModel.getClass());
-        });
+//        messages.forEach(twitterAvroModel -> {
+//            LOGGER.info("Type of the object received: {}", twitterAvroModel.getClass());
+//        });
 //        List<String> documentIds = elasticIndexClient.save(avroToElasticModelTransformer.getElasticModels(messages));
 //        LOGGER.info("Documents saved to elasticsearch with ids: {}", documentIds);
     }
