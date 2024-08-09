@@ -5,6 +5,8 @@ import com.microservices.twitter_consumer_elastic_search.kafka.model.TwitterAvro
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Component
 public class TwitterAvroModelToPosts {
@@ -13,7 +15,7 @@ public class TwitterAvroModelToPosts {
                 .builder()
                 .id(twitterAvroModel.getId())
                 .text(twitterAvroModel.getText())
-                .createdAt(Instant.ofEpochSecond(twitterAvroModel.getCreatedAt()).toString())
+                .createdAt(LocalDateTime.ofInstant(Instant.ofEpochSecond(twitterAvroModel.getCreatedAt()), ZoneId.systemDefault()).toString())
                 .build();
     }
 }
