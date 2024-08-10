@@ -6,17 +6,13 @@
 package com.microservices.twitter_consumer_elastic_search.kafka.model;
 
 import lombok.Data;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@Document
 public class TwitterAvroModel {
   private Long userId;
-  @Id
   private String id;
   private String text;
-  private Long createdAt;
+  private String createdAt;
 }
 
 

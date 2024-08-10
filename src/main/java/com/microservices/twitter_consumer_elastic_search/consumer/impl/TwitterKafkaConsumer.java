@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microservices.twitter_consumer_elastic_search.consumer.KafkaConsumer;
 import com.microservices.twitter_consumer_elastic_search.kafka.model.TwitterAvroModel;
-import com.microservices.twitter_consumer_elastic_search.service.PostsService;
+import com.microservices.twitter_consumer_elastic_search.service.impl.TwitterElasticRepositoryIndexClient;
 import com.microservices.twitter_consumer_elastic_search.transformer.TwitterAvroModelToPosts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,12 +20,12 @@ import java.util.List;
 public class TwitterKafkaConsumer implements KafkaConsumer<Long, String>{
     private static final Logger LOGGER = LoggerFactory.getLogger(TwitterKafkaConsumer.class);
 
-    private final PostsService postsService;
+    private final TwitterElasticRepositoryIndexClient twitterElasticRepositoryIndexClient;
     private final TwitterAvroModelToPosts twitterAvroModelToPosts;
 
-    public TwitterKafkaConsumer(PostsService postsService,
+    public TwitterKafkaConsumer(TwitterElasticRepositoryIndexClient twitterElasticRepositoryIndexClient,
                                 TwitterAvroModelToPosts twitterAvroModelToPosts) {
-        this.postsService = postsService;
+        this.twitterElasticRepositoryIndexClient = twitterElasticRepositoryIndexClient;
         this.twitterAvroModelToPosts = twitterAvroModelToPosts;
     }
 
@@ -46,7 +46,7 @@ public class TwitterKafkaConsumer implements KafkaConsumer<Long, String>{
 
         try {
             TwitterAvroModel twitterAvroModel = objectMapper.readValue(messages, TwitterAvroModel.class);
-            String id = postsService.save(twitterAvroModelToPosts.convertToPost(twitterAvroModel));
+            String id = twitterElasticRepositoryIndexClient.save(twitterAvroModelToPosts.convertModel(twitterAvroModel));
             LOGGER.info("Saved the post with id: {}", id);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
